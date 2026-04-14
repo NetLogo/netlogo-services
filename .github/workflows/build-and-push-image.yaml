@@ -1,4 +1,4 @@
-name: Build and Push Modeling Commons Images
+name: Build and Push NetLogo Services
 
 on:
   push:
@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Pull Git LFS files
+        run: git lfs pull
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
