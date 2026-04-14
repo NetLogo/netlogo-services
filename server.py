@@ -17,6 +17,16 @@ PREVIEW_JAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "services
 CACHE_DIR = os.path.join(tempfile.gettempdir(), "preview-cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
+TRUTHY = (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
+LOCALHOST = os.environ.get("LOCALHOST", "localhost")
+TRANSLATE_LOCALHOST = os.environ.get("TRANSLATE_LOCALHOST", "false").lower() in TRUTHY
+LOCALHOST_NAMES = {"127.0.0.1", "localhost", "0.0.0.0"}
+
 # simple in-process lock per URL to avoid duplicate renders
 _render_locks: dict[str, Lock] = {}
 _locks_lock = Lock()
@@ -33,6 +43,9 @@ DEFAULT_ALLOWED_ORIGINS = ",".join([
     "netlogoweb.org",
     "*.netlogoweb.org",
     "ccl.northwestern.edu",
+    "127.0.0.1",
+    "0.0.0.0",
+    "host.docker.internal"
 ])
 
 ALLOWED_ORIGINS = [
@@ -54,6 +67,28 @@ def _get_render_lock(url: str) -> Lock:
             _render_locks[url] = Lock()
         return _render_locks[url]
 
+def _translate_localhost_url(url: str) -> str:
+    if not TRANSLATE_LOCALHOST:
+        return url
+
+    parsed = urlparse(url)
+
+    if parsed.hostname not in LOCALHOST_NAMES:
+        return url
+
+    auth = ""
+    if parsed.username:
+        auth = parsed.username
+        if parsed.password:
+            auth = f"{auth}:{parsed.password}"
+        auth = f"{auth}@"
+
+    netloc = f"{auth}{LOCALHOST}"
+    if parsed.port:
+        netloc = f"{netloc}:{parsed.port}"
+
+    return urlunparse(parsed._replace(netloc=netloc))
+
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -68,6 +103,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._err(400, "missing model_url param")
 
         model_url = params["model_url"][0]
+        model_url = _translate_localhost_url(model_url)
         mu = urlparse(model_url)
         model_url = urlunparse(mu._replace(path=quote(mu.path)))
 
