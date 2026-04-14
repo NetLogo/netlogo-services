@@ -41,6 +41,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ steps.repo_slug.outputs.result }}/netlogo-services:latest
+            ${{ steps.repo_slug.outputs.result }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
