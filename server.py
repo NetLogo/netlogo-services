@@ -71,9 +71,6 @@ class Handler(BaseHTTPRequestHandler):
         mu = urlparse(model_url)
         model_url = urlunparse(mu._replace(path=quote(mu.path)))
 
-        if not model_url.endswith(".nlogox"):
-            return self._err(400, "model_url must end with .nlogox")
-
         if not _is_origin_allowed(model_url):
             return self._err(403, f"origin not allowed: {urlparse(model_url).hostname}")
 
