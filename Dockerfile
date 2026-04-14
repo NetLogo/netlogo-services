@@ -22,6 +22,7 @@ RUN groupadd -r netlogo && useradd -r -g netlogo -d /NetLogo -s /usr/sbin/nologi
   python3 \
   fontconfig \
   libfreetype6 \
+  libharfbuzz0b \
   ca-certificates \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
