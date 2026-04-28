@@ -104,8 +104,6 @@ class Handler(BaseHTTPRequestHandler):
 
         model_url = params["model_url"][0]
         model_url = _translate_localhost_url(model_url)
-        mu = urlparse(model_url)
-        model_url = urlunparse(mu._replace(path=quote(mu.path)))
 
         if not _is_origin_allowed(model_url):
             return self._err(403, f"origin not allowed: {urlparse(model_url).hostname}")
