@@ -8,13 +8,15 @@ import subprocess
 import tempfile
 import urllib.request
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs, urlunparse, quote
+from urllib.parse import urlparse, parse_qs, urlunparse
 from uuid import uuid4
 from threading import Lock
 
 PORT = int(os.environ.get("PORT", "8080"))
 PREVIEW_JAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "services", "preview.jar")
 CACHE_DIR = os.path.join(tempfile.gettempdir(), "preview-cache")
+ALLOWED_FORMATS = {"nlogo", "nlogo3d", "nlogox", "nlogox3d"}
+
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 TRUTHY = (
@@ -103,6 +105,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._err(400, "missing model_url param")
 
         model_url = params["model_url"][0]
+        model_format = params.get("model_format", ["nlogox"])[0]
+        if model_format not in ALLOWED_FORMATS:
+            return self._err(400, f"invalid model_format: {model_format}")
         model_url = _translate_localhost_url(model_url)
 
         if not _is_origin_allowed(model_url):
@@ -122,7 +127,7 @@ class Handler(BaseHTTPRequestHandler):
 
             req_id = uuid4().hex
             work_dir = os.path.join(tempfile.gettempdir(), req_id)
-            model_path = os.path.join(work_dir, "model.nlogox")
+            model_path = os.path.join(work_dir, f"model.{model_format}")
             preview_path = os.path.join(work_dir, "preview.png")
 
             try:
