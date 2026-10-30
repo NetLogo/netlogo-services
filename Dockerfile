@@ -18,7 +18,8 @@ RUN jlink \
 FROM debian:12-slim
 
 RUN groupadd -r netlogo && useradd -r -g netlogo -d /NetLogo -s /usr/sbin/nologin netlogo \
-  && apt-get update && apt-get install -y --no-install-recommends \
+  && apt-get update && apt-get upgrade -y \
+  && apt-get install -y --no-install-recommends \
   python3 \
   fontconfig \
   libfreetype6 \
